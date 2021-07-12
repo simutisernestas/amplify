@@ -5,3 +5,10 @@ pycocotools
 matplotlib
 numpy
 imutils
+
+# ./build.sh --parallel --build --update --config Release --cuda_home /usr/local/cuda-11.0 --cudnn_home /usr/lib/x86_64-linux-gnu/ --tensorrt_home ~/opt/TensorRT-7.2.2.3/--use_tensorrt --build_wheel --cmake_extra_defines ONNXRUNTIME_VERSION=$(cat ./VERSION_NUMBER) --cuda_version=11.0 --enable_pybind
+
+# https://github.com/microsoft/onnxruntime/tree/master/dockerfiles#tensorrt
+# https://www.onnxruntime.ai/docs/reference/execution-providers/TensorRT-ExecutionProvider.html#c-api-example
+
+# docker run -it onnxruntime-trt -v .:/yolact

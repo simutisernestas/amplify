@@ -14,11 +14,16 @@ from pathlib import Path
 Path("results").mkdir(exist_ok=True)
 import imutils
 
+sess_options = rt.SessionOptions()
+# sess_options.enable_profiling = False
+sess_options.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_ALL
+
 print("Loading trt execution, this may take a while... ")
-sess = rt.InferenceSession("yolact.onnx")
-print("Onnx execution prodivers:")
-print(sess.get_providers())
-print("WARNING! If above list doesn't contain TensorrtExecutionProvider model isn't executed by TensorRT")
+sess = rt.InferenceSession("yolact.onnx", sess_options)
+# sess.set_providers(['CUDAExecutionProvider'])
+# sess.set_providers(['TensorrtExecutionProvider'])
+if "TensorrtExecutionProvider" not in sess.get_providers():
+    raise Exception("TensorrtExecutionProvider can't be executed with TensorRT")
 input_name = sess.get_inputs()[0].name
 loc_name = sess.get_outputs()[0].name
 conf_name = sess.get_outputs()[1].name
@@ -34,7 +39,7 @@ def inference(img_path, show=False):
     batch = FastBaseTransform()(frame.unsqueeze(0))
 
     start = time.time()
-    for i in range(1):
+    for i in range(100):
         # inference benchmark
         pred_onx = sess.run([loc_name, conf_name, mask_name, priors_name, proto_name], {input_name: batch.cpu().detach().numpy()})
         detection = layers.Detect(81, bkg_label=0, top_k=200, conf_thresh=0.05, nms_thresh=0.5)
