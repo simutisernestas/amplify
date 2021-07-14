@@ -154,3 +154,7 @@ onnxruntime
 data/coco/
 yolact.onnx
 yolact_resnet50*
+
+**.out
+**.onnx
+inf/cache

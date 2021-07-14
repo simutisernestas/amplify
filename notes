@@ -1,0 +1,4 @@
+install docker https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker
+C/C++ API samples https://github.com/microsoft/onnxruntime/tree/master/csharp/test/Microsoft.ML.OnnxRuntime.EndToEndTests.Capi
+docker run --gpus all -e NVIDIA_DRIVER_CAPABILITIES=compute,utility -v $(pwd):/live -e NVIDIA_VISIBLE_DEVICES=all -it onnxruntime-yolact:latest bash
+g++ main.cpp -lonnxruntime $(pkg-config --cflags --libs opencv4)
