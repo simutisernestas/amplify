@@ -31,15 +31,15 @@ struct YOLACT {
         Ort::SessionOptions session_options;
         session_options.SetIntraOpNumThreads(1);
 
-        // OrtTensorRTProviderOptions trt_options{};
-        // trt_options.device_id = 0;
-        // trt_options.trt_max_workspace_size = 2147483648;
-        // trt_options.trt_max_partition_iterations = 10;
-        // trt_options.trt_min_subgraph_size = 5;
-        // trt_options.trt_engine_cache_enable = 1;
-        // trt_options.trt_engine_cache_path = "cache";
-        // trt_options.trt_dump_subgraphs = 1;
-        // session_options.AppendExecutionProvider_TensorRT(trt_options);
+        OrtTensorRTProviderOptions trt_options{};
+        trt_options.device_id = 0;
+        trt_options.trt_max_workspace_size = 2147483648;
+        trt_options.trt_max_partition_iterations = 10;
+        trt_options.trt_min_subgraph_size = 5;
+        trt_options.trt_engine_cache_enable = 1;
+        trt_options.trt_engine_cache_path = "cache";
+        trt_options.trt_dump_subgraphs = 1;
+        session_options.AppendExecutionProvider_TensorRT(trt_options);
 
         // TODO:
         // trt_options.trt_fp16_enable = 1;
@@ -162,7 +162,7 @@ int main() {
 
     // TODO: 5 outputs :))))
     inf.inputInfo();
-    return 0;
+    // return 0;
 
     int length = 10;
     for (int i = length - 1; i >= 0; i--) {

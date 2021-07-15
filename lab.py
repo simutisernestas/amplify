@@ -39,19 +39,21 @@ def inference(img_path, show=False):
 
         start = time.time()
 
-        img = imutils.resize(img, width=1024)
+        img = imutils.resize(img, width=550, height=550)
         frame = torch.Tensor(img).cuda().float()
         batch = FastBaseTransform()(frame.unsqueeze(0))
         
         # inference benchmark
         pred_onx = sess.run([loc_name, conf_name, mask_name, priors_name, proto_name], {input_name: batch.cpu().detach().numpy()})
+        print(f"Inference duration: {(time.time()-start)}")
+        
         detection = layers.Detect(81, bkg_label=0, top_k=200, conf_thresh=0.05, nms_thresh=0.5)
         preds = detection({'loc': torch.from_numpy(pred_onx[0]), 
                         'conf': torch.from_numpy(pred_onx[1]), 
                         'mask': torch.from_numpy(pred_onx[2]), 
                         'priors': torch.from_numpy(pred_onx[3]),
                         'proto': torch.from_numpy(pred_onx[4])})
-        print(f"Average inference duration: {(time.time()-start)/(i+1)}s")
+        
 
     img = eval.prep_display(preds, frame.cpu(), None, None, None, None, undo_transform=False)
     cv2.imwrite('results/' + img_path.split('/')[1], img)
