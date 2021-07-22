@@ -43,7 +43,6 @@ struct YOLACT {
         trt_options.trt_fp16_enable = 1;
         session_options.AppendExecutionProvider_TensorRT(trt_options);
 
-
         // Sets graph optimization level
         // Available levels are
         // ORT_DISABLE_ALL -> To disable all optimizations
@@ -59,7 +58,8 @@ struct YOLACT {
 
     int Run() {
         const char* input_names[] = {"input.1"};
-        const char* output_names[] = {"792"};  // TODO: add outputs here
+        // TODO: fix
+        const char* output_names[] = {"792", "992", "794", "801", "596"};
 
         session_.Run(Ort::RunOptions{nullptr}, input_names, &input_tensor_, 1,
                      output_names, &output_tensor_, 1);
@@ -101,19 +101,36 @@ struct YOLACT {
                 printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
         }
 
-        // Input 0 : name=input.1
-        // Input 0 : type=1
-        // Input 0 : num_dims=4
-        // Input 0 : dim 0=1
-        // Input 0 : dim 1=3
-        // Input 0 : dim 2=550
-        // Input 0 : dim 3=550
         // Output 0 : name=792
         // output 0 : type=1
         // output 0 : num_dims=3
         // output 0 : dim 0=1
         // output 0 : dim 1=19248
         // output 0 : dim 2=4
+        // Output 1 : name=801
+        // output 1 : type=1
+        // output 1 : num_dims=3
+        // output 1 : dim 0=1
+        // output 1 : dim 1=19248
+        // output 1 : dim 2=81
+        // Output 2 : name=794
+        // output 2 : type=1
+        // output 2 : num_dims=3
+        // output 2 : dim 0=1
+        // output 2 : dim 1=19248
+        // output 2 : dim 2=32
+        // Output 3 : name=992
+        // output 3 : type=1
+        // output 3 : num_dims=2
+        // output 3 : dim 0=19248
+        // output 3 : dim 1=4
+        // Output 4 : name=596
+        // output 4 : type=1
+        // output 4 : num_dims=4
+        // output 4 : dim 0=1
+        // output 4 : dim 1=138
+        // output 4 : dim 2=138
+        // output 4 : dim 3=32
 
         std::vector<int64_t> output_node_dims;
 
