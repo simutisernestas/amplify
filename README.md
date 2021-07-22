@@ -2,6 +2,8 @@
 
 # TODO: update
 
+[Model](https://drive.google.com/file/d/1bkHD6EMLVhxKFv1L9ZHc-OOWmOKvj8pi/view?usp=sharing)
+
 ##### Prerequisites
 - Pytorch (tested with 1.7.0)
 - YOLACT requirements

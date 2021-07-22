@@ -17,6 +17,8 @@ Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "test");
 
 struct YOLACT {
     YOLACT() {
+        input_image_.resize(width_ * height_ * channels_);
+
         auto memory_info =  // TODO:
             Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
         // Ort::AllocatorInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
@@ -34,17 +36,13 @@ struct YOLACT {
         OrtTensorRTProviderOptions trt_options{};
         trt_options.device_id = 0;
         trt_options.trt_max_workspace_size = 2147483648;
-        trt_options.trt_max_partition_iterations = 10;
-        trt_options.trt_min_subgraph_size = 5;
+        trt_options.trt_max_partition_iterations = 1000;
+        trt_options.trt_min_subgraph_size = 1;
         trt_options.trt_engine_cache_enable = 1;
         trt_options.trt_engine_cache_path = "cache";
-        trt_options.trt_dump_subgraphs = 1;
+        trt_options.trt_fp16_enable = 1;
         session_options.AppendExecutionProvider_TensorRT(trt_options);
 
-        // TODO:
-        // trt_options.trt_fp16_enable = 1;
-        // trt_options.trt_int8_enable = 1;
-        // trt_options.trt_int8_use_native_calibration_table = 1;
 
         // Sets graph optimization level
         // Available levels are
@@ -61,7 +59,7 @@ struct YOLACT {
 
     int Run() {
         const char* input_names[] = {"input.1"};
-        const char* output_names[] = {"792"}; // TODO: add outputs here
+        const char* output_names[] = {"792"};  // TODO: add outputs here
 
         session_.Run(Ort::RunOptions{nullptr}, input_names, &input_tensor_, 1,
                      output_names, &output_tensor_, 1);
@@ -144,7 +142,7 @@ struct YOLACT {
     static constexpr const int width_ = 550;
     static constexpr const int height_ = 550;
     static constexpr const int channels_ = 3;
-    std::array<float, width_ * height_ * channels_> input_image_{};
+    std::vector<float> input_image_{};
     std::array<float, 19248 * 4> results_{};
 
    private:
@@ -162,7 +160,6 @@ int main() {
 
     // TODO: 5 outputs :))))
     inf.inputInfo();
-    // return 0;
 
     int length = 10;
     for (int i = length - 1; i >= 0; i--) {
@@ -170,14 +167,14 @@ int main() {
 
         std::chrono::steady_clock::time_point begin =
             std::chrono::steady_clock::now();
-        cv::resize(img, img, cv::Size(550, 550));
+        cv::resize(img, img, cv::Size(550, 550), 0, 0, cv::INTER_NEAREST);
 
         img.convertTo(img, CV_32FC1);
         img.reshape(1, img.total() * img.channels());
         if (!img.isContinuous()) img = img.clone();
 
-        for (int i = 0; i < img.total() * img.channels(); ++i)
-            inf.input_image_[i] = (float)img.data[i];
+        inf.input_image_.assign(
+            (float*)img.data, (float*)img.data + img.total() * img.channels());
 
         inf.Run();
 

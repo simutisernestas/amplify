@@ -1,18 +1,8 @@
-from utils.augmentations import FastBaseTransform
+import onnxruntime as rt
 import cv2
 import numpy as np
-import torch
-import onnxruntime as rt
 import time
-import layers
-import eval
-import matplotlib.pyplot as plt
-import time 
-eval.get_args()
 import glob
-from pathlib import Path
-Path("results").mkdir(exist_ok=True)
-import imutils
 
 sess_options = rt.SessionOptions()
 # sess_options.enable_profiling = False
@@ -23,7 +13,9 @@ sess = rt.InferenceSession("yolact.onnx", sess_options)
 # sess.set_providers(['CUDAExecutionProvider'])
 # sess.set_providers(['TensorrtExecutionProvider'])
 if "TensorrtExecutionProvider" not in sess.get_providers():
-    raise Exception("TensorrtExecutionProvider can't be executed with TensorRT")
+    raise Exception(
+        "TensorrtExecutionProvider can't be executed with TensorRT")
+
 input_name = sess.get_inputs()[0].name
 loc_name = sess.get_outputs()[0].name
 conf_name = sess.get_outputs()[1].name
@@ -31,36 +23,32 @@ mask_name = sess.get_outputs()[2].name
 priors_name = sess.get_outputs()[3].name
 proto_name = sess.get_outputs()[4].name
 
-def inference(img_path, show=False):
-    # if too big to fit on GPU
-    
-    for i in range(100):
+
+def inference(img_path):
+    for i in range(5):
         img = cv2.imread(img_path)
 
         start = time.time()
 
-        img = imutils.resize(img, width=550, height=550)
-        frame = torch.Tensor(img).cuda().float()
-        batch = FastBaseTransform()(frame.unsqueeze(0))
-        
+        img = cv2.resize(img, (550, 550), interpolation=cv2.INTER_NEAREST)
+        # Convert to BGR
+        img = np.array(img)[:, :, [2, 1, 0]].astype('float32')
+        # HWC -> CHW
+        img = np.transpose(img, [2, 0, 1])
+        img = np.expand_dims(img, axis=0)
+
         # inference benchmark
-        pred_onx = sess.run([loc_name, conf_name, mask_name, priors_name, proto_name], {input_name: batch.cpu().detach().numpy()})
+        # pred_onx = sess.run([loc_name, conf_name, mask_name, priors_name, proto_name], {input_name: batch.cpu().detach().numpy()})
+        pred_onx = sess.run([loc_name, conf_name, mask_name,
+                             priors_name, proto_name], {input_name: img})
         print(f"Inference duration: {(time.time()-start)}")
-        
-        detection = layers.Detect(81, bkg_label=0, top_k=200, conf_thresh=0.05, nms_thresh=0.5)
-        preds = detection({'loc': torch.from_numpy(pred_onx[0]), 
-                        'conf': torch.from_numpy(pred_onx[1]), 
-                        'mask': torch.from_numpy(pred_onx[2]), 
-                        'priors': torch.from_numpy(pred_onx[3]),
-                        'proto': torch.from_numpy(pred_onx[4])})
-        
 
-    img = eval.prep_display(preds, frame.cpu(), None, None, None, None, undo_transform=False)
-    cv2.imwrite('results/' + img_path.split('/')[1], img)
+        preds = {'loc': pred_onx[0],
+                 'conf': pred_onx[1],
+                 'mask': pred_onx[2],
+                 'priors': pred_onx[3],
+                 'proto': pred_onx[4]}
 
-    if show:
-        plt.imshow(img)
-        plt.show()
 
 print("Starting inference...")
 for f in glob.glob("data/*.jpg"):

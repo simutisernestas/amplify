@@ -5,5 +5,3 @@ pycocotools
 matplotlib
 numpy
 imutils
-torch
-torchvision
