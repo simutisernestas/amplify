@@ -176,13 +176,14 @@ int main(int argc, char* argv[]) {
     if (argc == 1) {
         printf(
             "Argument are required.\n1) model.onnx path\n2) test image "
-            "path (optional - uses the one from data folder)\n",
+            "path\n",
             argc);
         return 1;
     }
 
     const char* model = argv[1];
-    const char* image = (argc == 3) ? argv[2] : "../../data/stefan.jpg";
+    const char* image = argv[2];
+    auto img = imread(image);
 
     auto inf = YOLACT(model);
 
@@ -191,7 +192,7 @@ int main(int argc, char* argv[]) {
 
     int length = 10;
     for (int i = length - 1; i >= 0; i--) {
-        auto img = imread(image);
+        img = imread(image);
 
         std::chrono::steady_clock::time_point begin =
             std::chrono::steady_clock::now();
