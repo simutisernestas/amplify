@@ -13,6 +13,9 @@
 
 using namespace cv;
 
+static const size_t N_INPUT = 1;
+static const size_t N_OUTPUT = 5;
+
 Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "test");
 
 struct YOLACT {
@@ -33,15 +36,15 @@ struct YOLACT {
         Ort::SessionOptions session_options;
         session_options.SetIntraOpNumThreads(1);
 
-        OrtTensorRTProviderOptions trt_options{};
-        trt_options.device_id = 0;
-        trt_options.trt_max_workspace_size = 2147483648;
-        trt_options.trt_max_partition_iterations = 1000;
-        trt_options.trt_min_subgraph_size = 1;
-        trt_options.trt_engine_cache_enable = 1;
-        trt_options.trt_engine_cache_path = "cache";
-        trt_options.trt_fp16_enable = 1;
-        session_options.AppendExecutionProvider_TensorRT(trt_options);
+        // OrtTensorRTProviderOptions trt_options{};
+        // trt_options.device_id = 0;
+        // trt_options.trt_max_workspace_size = 2147483648;
+        // trt_options.trt_max_partition_iterations = 1000;
+        // trt_options.trt_min_subgraph_size = 1;
+        // trt_options.trt_engine_cache_enable = 1;
+        // trt_options.trt_engine_cache_path = "cache";
+        // trt_options.trt_fp16_enable = 1;
+        // session_options.AppendExecutionProvider_TensorRT(trt_options);
 
         // Sets graph optimization level
         // Available levels are
@@ -61,8 +64,12 @@ struct YOLACT {
         // TODO: fix
         const char* output_names[] = {"792", "992", "794", "801", "596"};
 
-        session_.Run(Ort::RunOptions{nullptr}, input_names, &input_tensor_, 1,
-                     output_names, &output_tensor_, 1);
+        session_.Run(Ort::RunOptions{nullptr}, input_names, &input_tensor_,
+                     N_INPUT, output_names, output_tensors_.data(), N_OUTPUT);
+
+        for (int i = 0; i < 5; i++) {
+            bool is = output_tensors_[i].IsTensor();
+        }
 
         return 0;
     }
@@ -101,37 +108,6 @@ struct YOLACT {
                 printf("Input %d : dim %d=%jd\n", i, j, input_node_dims[j]);
         }
 
-        // Output 0 : name=792
-        // output 0 : type=1
-        // output 0 : num_dims=3
-        // output 0 : dim 0=1
-        // output 0 : dim 1=19248
-        // output 0 : dim 2=4
-        // Output 1 : name=801
-        // output 1 : type=1
-        // output 1 : num_dims=3
-        // output 1 : dim 0=1
-        // output 1 : dim 1=19248
-        // output 1 : dim 2=81
-        // Output 2 : name=794
-        // output 2 : type=1
-        // output 2 : num_dims=3
-        // output 2 : dim 0=1
-        // output 2 : dim 1=19248
-        // output 2 : dim 2=32
-        // Output 3 : name=992
-        // output 3 : type=1
-        // output 3 : num_dims=2
-        // output 3 : dim 0=19248
-        // output 3 : dim 1=4
-        // Output 4 : name=596
-        // output 4 : type=1
-        // output 4 : num_dims=4
-        // output 4 : dim 0=1
-        // output 4 : dim 1=138
-        // output 4 : dim 2=138
-        // output 4 : dim 3=32
-
         std::vector<int64_t> output_node_dims;
 
         size_t num_outputs = session_.GetOutputCount();
@@ -168,6 +144,10 @@ struct YOLACT {
     Ort::Value input_tensor_{nullptr};
     std::array<int64_t, 4> input_shape_{1, channels_, width_, height_};
 
+    std::array<Ort::Value, N_OUTPUT> output_tensors_ = {
+        Ort::Value(nullptr), Ort::Value(nullptr), Ort::Value(nullptr),
+        Ort::Value(nullptr), Ort::Value(nullptr)};
+
     Ort::Value output_tensor_{nullptr};
     std::array<int64_t, 3> output_shape_{1, 19248, 4};
 };
@@ -190,7 +170,7 @@ int main(int argc, char* argv[]) {
     // TODO: 5 outputs :))))
     inf.inputInfo();
 
-    int length = 10;
+    int length = 2;
     for (int i = length - 1; i >= 0; i--) {
         img = imread(image);
 
