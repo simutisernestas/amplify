@@ -16,7 +16,7 @@ using namespace cv;
 Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "test");
 
 struct YOLACT {
-    YOLACT() {
+    YOLACT(const char* model) {
         input_image_.resize(width_ * height_ * channels_);
 
         auto memory_info =  // TODO:
@@ -53,7 +53,7 @@ struct YOLACT {
         session_options.SetGraphOptimizationLevel(
             GraphOptimizationLevel::ORT_ENABLE_ALL);
 
-        session_ = Ort::Session(env, "../yolact.onnx", session_options);
+        session_ = Ort::Session(env, model, session_options);
     }
 
     int Run() {
@@ -172,15 +172,26 @@ struct YOLACT {
     std::array<int64_t, 3> output_shape_{1, 19248, 4};
 };
 
-int main() {
-    auto inf = YOLACT();
+int main(int argc, char* argv[]) {
+    if (argc == 1) {
+        printf(
+            "Argument are required.\n1) model.onnx path\n2) test image "
+            "path (optional - uses the one from data folder)\n",
+            argc);
+        return 1;
+    }
+
+    const char* model = argv[1];
+    const char* image = (argc == 3) ? argv[2] : "../../data/stefan.jpg";
+
+    auto inf = YOLACT(model);
 
     // TODO: 5 outputs :))))
     inf.inputInfo();
 
     int length = 10;
     for (int i = length - 1; i >= 0; i--) {
-        auto img = imread("../data/stefan.jpg");
+        auto img = imread(image);
 
         std::chrono::steady_clock::time_point begin =
             std::chrono::steady_clock::now();
