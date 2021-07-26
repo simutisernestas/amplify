@@ -43,7 +43,9 @@ SHELL ["/bin/bash", "-c"]
 WORKDIR /tmp
 
 # change the locale from POSIX to UTF-8
-RUN locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+RUN apt-get clean && apt-get update && apt-get install -y locales
+RUN locale-gen en_US en_US.UTF-8 
+RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV PYTHONIOENCODING=utf-8
 
@@ -108,26 +110,6 @@ RUN python3 -m pip install -U \
   pytest-repeat \
   pytest-rerunfailures \
   pytest
-
-# 
-# install OpenCV (with CUDA)
-#
-ARG OPENCV_URL=https://nvidia.box.com/shared/static/5v89u6g5rb62fpz4lh0rz531ajo2t5ef.gz
-ARG OPENCV_DEB=OpenCV-4.5.0-aarch64.tar.gz
-
-RUN mkdir opencv && \
-  cd opencv && \
-  wget --quiet --show-progress --progress=bar:force:noscroll --no-check-certificate ${OPENCV_URL} -O ${OPENCV_DEB} && \
-  tar -xzvf ${OPENCV_DEB} && \
-  dpkg -i --force-depends *.deb && \
-  apt-get update && \
-  apt-get install -y -f --no-install-recommends && \
-  dpkg -i *.deb && \
-  rm -rf /var/lib/apt/lists/* && \
-  apt-get clean && \
-  cd ../ && \
-  rm -rf opencv
-
 
 # 
 # generate ROS source code workspace
