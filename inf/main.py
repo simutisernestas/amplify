@@ -51,6 +51,6 @@ def inference(img_path):
 
 
 print("Starting inference...")
-for f in glob.glob("data/*.jpg"):
+for f in glob.glob("../data/*.jpg"):
     print(f"Processing {f}")
     inference(f)
